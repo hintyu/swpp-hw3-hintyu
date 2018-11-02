@@ -15,22 +15,25 @@ describe('ArticlesComponent', () => {
   let userServiceSpy
   let articleServiceSpy
   let routerSpy
+  let navigateSpy
   let activatedRoute: ActivatedRouteStub
-  let signedInUser = new User(1,'e','p','n',true)
+  let expectedArticle : Article[] = [
+    { id: 1, author_id: 1, title: 't1', content: 'c1' },
+    { id: 2, author_id: 2, title: 't2', content: 'c2' },
+  ]
+
   const routes: Routes = [{path: 'articles', component: ArticlesComponent}]
 
   beforeEach(async(() => {
     activatedRoute = new ActivatedRouteStub()
     userServiceSpy = jasmine.createSpyObj('UserService',
-      ['getCurrentUser', 'signOut'])
+      ['getCurrentUser', 'signOut', 'findAuthor'])
     articleServiceSpy = jasmine.createSpyObj('ArticleService',
       ['getArticleList'])
     userServiceSpy.getCurrentUser.and.returnValue(
-      new User(1,'e','p','n',false))
-    articleServiceSpy.getArticleList.and.returnValue([
-      { id: 1, author_id: 1, title: 't1', content: 'c1' },
-      { id: 2, author_id: 2, title: 't2', content: 'c2' },
-    ])
+      new User(1,'e','p','n',true))
+    userServiceSpy.findAuthor.and.returnValue('n')
+    articleServiceSpy.getArticleList.and.returnValue(Promise.resolve(expectedArticle))
 
     routerSpy = jasmine.createSpyObj('Router', ['navigate'])
     TestBed.configureTestingModule({
@@ -58,17 +61,53 @@ describe('ArticlesComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('ngOninit should force out not signed_in user', async(()=>{
+    userServiceSpy.getCurrentUser.and.returnValue(
+      new User(1,'e','p','n',false))
+    component.ngOnInit()
+    fixture.whenStable().then(()=> {
+      expect(userServiceSpy.getCurrentUser).toHaveBeenCalled()
+      // send un signed-in user to ../sign_in
+      const routerSpy = fixture.debugElement.injector.get(Router);
+      let navigateSpy = routerSpy.navigate as jasmine.Spy
+      expect(navigateSpy).toHaveBeenCalled()
+    })
+  }))
+
+  it('ngOninit should call getArticleList to initialize', async(()=>{
+    component.ngOnInit()
+    fixture.whenStable().then(()=> {
+      expect(userServiceSpy.getCurrentUser).toHaveBeenCalled()
+      expect(articleServiceSpy.getArticleList).toHaveBeenCalled()
+      expect(component.articles).toEqual(expectedArticle)
+    })
+  }))
+
+  it('signOut should call userService to signOut', async(()=>{
+    component.signOut()
+    expect(userServiceSpy.signOut).toHaveBeenCalled()
+    fixture.whenStable().then(()=>{
+      // send user to ../sign_in
+      const routerSpy = fixture.debugElement.injector.get(Router);
+      let navigateSpy = routerSpy.navigate as jasmine.Spy
+      expect(navigateSpy).toHaveBeenCalled()
+    })
+  }))
+
+  it('findAuthor should call userService to find Author', ()=>{
+    let authorId = 1
+    let foundUserName = component.findAuthor(authorId)
+    expect(userServiceSpy.findAuthor).toHaveBeenCalledWith(authorId)
+    expect(foundUserName).toEqual('n')
+  })
+
+  it('createArticle should navigate to /create', ()=>{
+    component.createArticle()
+    const routerSpy = fixture.debugElement.injector.get(Router);
+    let navigateSpy = routerSpy.navigate as jasmine.Spy
+    expect(navigateSpy).toHaveBeenCalledWith(['/create'])
+  })
 });
-
-// it ngOninit should call userService.getCurrentUser
-//    and gotoSignIn if not signed in
-//    and call getArticleList to initialize articles
-//    getArticleList should call articleService.getArticleList
-
-// it sighOut should call userService.signOut
-//    and router Navigate to ../sign_in
-
-// it findauthor should call userService.findAuthor and return
-// it createArticle should navigate to /create
 
 

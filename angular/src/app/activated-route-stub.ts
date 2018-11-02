@@ -2,16 +2,21 @@
 export { ActivatedRoute } from '@angular/router';
 
 import { convertToParamMap, ParamMap, Params } from '@angular/router';
-import { ReplaySubject } from 'rxjs';
+import {Observable, ReplaySubject} from 'rxjs';
 
 /**
  * An ActivateRoute test double with a `paramMap` observable.
  * Use the `setParamMap()` method to add the next `paramMap` value.
  */
 export class ActivatedRouteStub {
+
   // Use a ReplaySubject to share previous values with subscribers
   // and pump new values into the `paramMap` observable
   private subject = new ReplaySubject<ParamMap>();
+
+  get snapshot() {
+    return this.paramMap
+  }
 
   constructor(initialParams?: Params) {
     this.setParamMap(initialParams);

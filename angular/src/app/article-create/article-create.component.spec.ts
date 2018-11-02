@@ -1,34 +1,100 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRouteStub } from '../activated-route-stub';
 import { ArticleCreateComponent } from './article-create.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap'
-import { AppComponent } from '../app.component';
 import { RouterTestingModule } from '@angular/router/testing';
+import { Article } from '../article';
+import { Router, ActivatedRoute, Routes, ParamMap } from '@angular/router';
+import { User } from '../user';
+import { UserService } from '../user.service';
+import { ArticleService } from '../article.service';
+import { APP_BASE_HREF } from '@angular/common';
+
 
 describe('ArticleCreateComponent', () => {
-  let component: ArticleCreateComponent;
-  let fixture: ComponentFixture<ArticleCreateComponent>;
+  let component: ArticleCreateComponent
+  let fixture: ComponentFixture<ArticleCreateComponent>
+  let userServiceSpy
+  let articleServiceSpy
+  let routerSpy
+  let activatedRoute: ActivatedRouteStub
+  let expectedArticle : Article[] = [
+    { id: 1, author_id: 1, title: 't1', content: 'c1' },
+    { id: 2, author_id: 2, title: 't2', content: 'c2' },
+  ]
+
+  const routes: Routes = [
+    {path: 'articles/create', component: ArticleCreateComponent},
+  ]
 
   beforeEach(async(() => {
+    activatedRoute = new ActivatedRouteStub()
+    userServiceSpy = jasmine.createSpyObj('UserService',
+      ['getCurrentUser', 'signOut', 'findAuthor'])
+    articleServiceSpy = jasmine.createSpyObj('ArticleService',
+      ['addArticle'])
+    userServiceSpy.getCurrentUser.and.returnValue(
+      new User(1,'e','p','n',true))
+    userServiceSpy.findAuthor.and.returnValue('n')
+    routerSpy = jasmine.createSpyObj('Router', ['navigate'])
+
     TestBed.configureTestingModule({
-      declarations: [ ArticleCreateComponent, AppComponent ],
       imports: [
         FormsModule,
         NgbModule,
-        ReactiveFormsModule,
-        RouterTestingModule,
+        RouterTestingModule.withRoutes(routes)
       ],
+      declarations: [ ArticleCreateComponent ],
+      providers: [
+        { provide: ActivatedRoute, useValue: activatedRoute },
+        { provide: UserService, useValue: userServiceSpy},
+        { provide: ArticleService, useValue: articleServiceSpy},
+        { provide: Router, useValue: routerSpy},
+        { provide: APP_BASE_HREF, useValue : '/' }
+      ]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ArticleCreateComponent);
-    component = fixture.componentInstance;2
-    fixture.detectChanges();
+    fixture = TestBed.createComponent(ArticleCreateComponent)
+    component = fixture.componentInstance
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+/*
+  it('ngOninit should force out not signed_in user', async(()=>{
+    userServiceSpy.getCurrentUser.and.returnValue(
+      new User(1,'e','p','n',false))
+    component.ngOnInit()
+    fixture.whenStable().then(()=> {
+      expect(userServiceSpy.getCurrentUser).toHaveBeenCalled()
+      // send un signed-in user to ../sign_in
+      const routerSpy = fixture.debugElement.injector.get(Router);
+      let navigateSpy = routerSpy.navigate as jasmine.Spy
+      expect(navigateSpy).toHaveBeenCalled()
+    })
+  }))
+*/
+  it('signOut should call userService to signOut', async(()=>{
+    component.signOut()
+    expect(userServiceSpy.signOut).toHaveBeenCalled()
+    fixture.whenStable().then(()=>{
+      // send user to ../sign_in
+      const routerSpy = fixture.debugElement.injector.get(Router);
+      let navigateSpy = routerSpy.navigate as jasmine.Spy
+      expect(navigateSpy).toHaveBeenCalled()
+    })
+  }))
+
+  it('findAuthor should call userService to find Author', ()=>{
+    let authorId = 1
+    let foundUserName = component.findAuthor(authorId)
+    expect(userServiceSpy.findAuthor).toHaveBeenCalledWith(authorId)
+    expect(foundUserName).toEqual('n')
+  })
+
 });
