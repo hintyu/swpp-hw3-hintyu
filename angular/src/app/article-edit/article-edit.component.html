@@ -1,0 +1,33 @@
+<div>Article-edit</div>
+<button  id="signout-button" (click)="signOut()">sign out</button>
+
+<ngb-tabset>
+  <ngb-tab title="Write" id="write-tab-button">
+    <ng-template ngbTabContent>
+      <div>
+        <input id="article-title-input"
+               [(ngModel)]="article.title"/>
+        <br>
+        <textarea id="article-content-input"
+                  [(ngModel)]="article.content"
+                  cols="40" rows="8"></textarea>
+      </div>
+    </ng-template>
+  </ngb-tab>
+  <ngb-tab title="Preview" id="preview-tab-button">
+    <ng-template ngbTabContent>
+      <div>
+        <h1 id="article-title">{{article.title}}</h1>
+        <p id="article-author">{{currentUser.name}}</p>
+        <p id="article-content">{{article.content}}</p>
+      </div>
+    </ng-template>
+  </ngb-tab>
+</ngb-tabset>
+
+<button id="back-edit-article-button"
+        (click)="goBackTry()">Back</button>
+
+<button id="confirm-edit-article-button"
+        [disabled] = "!article.title && !article.content"
+        (click)="confirmEdit()">Confirm</button>

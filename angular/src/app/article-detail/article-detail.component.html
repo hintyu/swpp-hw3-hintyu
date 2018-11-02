@@ -1,0 +1,39 @@
+<div>Article-detail</div>
+
+<button id="signout-button" (click)="signOut()">sign out</button>
+
+<div>
+  <h1 id="article-title">{{article.title}}</h1>
+  <p id="article-author">{{findAuthor(article.author_id)}}</p>
+  <p id="article-content">{{article.content}}</p>
+</div>
+<div>
+  <button id="edit-article-button"
+          routerLink="/articles/{{article.id}}/edit"
+          *ngIf="article.author_id==currentUser.id">edit Article</button>
+  <button id="delete-article-button"
+          (click)="deleteArticle()"
+          *ngIf="article.author_id==currentUser.id">delete Article</button>
+</div>
+
+<div><br>Comments
+  <ul>
+    <li *ngFor="let comment of comments">
+      <span>{{findAuthor(comment.author_id)}}</span>
+      <span>&nbsp;&nbsp;{{comment.content}}&nbsp;</span>
+      <button id="edit-comment-button"
+              (click)="editComment(comment)"
+              *ngIf="comment.author_id==currentUser.id">edit</button>
+      <button id="delete-comment-button"
+              (click)="deleteComment(comment)"
+              *ngIf="comment.author_id==currentUser.id">delete</button>
+    </li>
+  </ul>
+  <input title="comment" type="text" id="new-comment-content-input"
+          [(ngModel)]="newComment.content"/>
+  <button id="confirm-create-comment-button"
+          (click)="createComment()">Comment</button>
+</div>
+
+<button id="back-detail-article-button"
+       (click)="goBack()">back</button>

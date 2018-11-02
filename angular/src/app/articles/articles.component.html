@@ -1,0 +1,16 @@
+<div>Articles!</div>
+<button  id="signout-button" (click)="signOut()">sign out</button>
+<div>
+  <ul>
+    <li *ngFor="let article of articles">
+      <span>{{article.id}}&nbsp;&nbsp;</span>
+      <button routerLink="/articles/{{article.id}}">
+        {{article.title}}
+      </button>
+      <span>&nbsp;&nbsp;{{findAuthor(article.author_id)}}</span>
+    </li>
+  </ul>
+</div>
+<button id="create-article-button"
+        routerLink="/articles/create">Create
+</button>
